@@ -30,19 +30,10 @@ Board.prototype.reset = function() {
 }
 
 Board.prototype.test = function() {
-  // this.add([1,2,3,4]);
-  // t1 = new Tile([2,9,8,3]);
+  this.add([1,2,3,4]);
+  t1 = new Tile([2,9,8,3]);
 
-  // return this.tileScan(t1).then((res) => console.log(res)).catch((err) => console.log(err))
-  const tiles = [
-    [1,2,3,4],
-    [2,9,8,3],
-    [3,8,9,7],
-    [9,8,3,2]
-  ]
-
-  this.add(tiles[0]);
-  this.add(tiles[1]);
+  return this.tileScan(t1).then((res) => console.log(res)).catch((err) => console.log(err))
 }
 
 
@@ -59,44 +50,35 @@ Board.prototype.add = function(input) {
     }
 
     this.tileScan(tile)
-      .then((res) => {
-        console.log('scan complete', res);
-        this.place(res, tile);
-      })
-      .catch((reject) => {
-        console.log('error', reject)
-      });
+      .then(this.place)
+      .catch(reject);
     // this.cache = this.cache.concat(input);
   });
 }
 
 Board.prototype.updateCache = function(tile) {
-  this.cache.values = this.cache.values.concat(tile.lib);
+  this.cache.values.concat(tile.lib);
   this.cache.board += tile.placeString;
 }
 
-Board.prototype.place = function(scanResult, tile) {
+Board.prototype.place = function(tile, scanResult) {
   const matchTile = this.library[Math.floor(scanResult.match / 4)];
   const matchSide = scanResult.match % 4;
 
-  console.log({matchTile: Math.floor(scanResult.match / 4), matchSide})
-  // this.verifyPlacement(
+
 }
 
-Board.prototype.search = function(param, value) {
-  const query = new Query(param, value);
-  const result = this.cache.board.match(query.regex);
-  return result ? this.library[result[1]] : null;
+Board.prototype.search = {  
+  x: (val) => {
+    return this.library[this.cache.board.match(new Regexp('/(\d*)\.(\d*)\-(' + val + ')\,(\d*)/'))[1]];
+  },
+  y: (val) => {
+    return this.library[this.cache.board.match(new Regexp('/(\d*)\.(\d*)\-(\d*)\,(' + val + ')/'))[1]];
+  },
+  id: (val) => {
+    return this.library[this.cache.board.match(new Regexp('/(' + val + ')\.(\d*)\-(\d*)\,(\d*)/'))[1]];
+  }
 }
-
-function Query(param, value) {
-  this.regex = this[param](value);
-}
-Query.prototype.x = function(val) { return new RegExp('(\\d*)\\.(\\d*)\\-(' + val + ')\\,(\\d*)'); }
-Query.prototype.y = function(val) { return new RegExp('(\\d*)\\.(\\d*)\\-(\\d*)\\,(' + val + ')'); }
-Query.prototype.id = function(val) { return new RegExp('(' + val + ')\\.(\\d*)\\-(\\d*)\\,(\\d*)'); }
-
-
 
 
 // input = []
@@ -142,7 +124,7 @@ Tile.prototype.place = function(x, y, rotation) {
 }
 
 Tile.prototype.generatePlaceString = function() {
-  return `${this.index}.${this.rotation}-${this.x},${this.y};`;
+  return `${this.index}.${this.rotation}-${this.x},${this.y}`;
 }
 
 module.exports = new Board();
