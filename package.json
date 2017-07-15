@@ -1,0 +1,24 @@
+{
+  "name": "tiles",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest",
+    "start": "babel-node ./app"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  },
+  "author": "Garrett Amini",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^2.11.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "jest": "^20.0.4"
+  }
+}
