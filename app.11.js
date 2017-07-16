@@ -1,3 +1,8 @@
+// import program from 'commander';
+// import { version } from './package.json';
+
+// program
+// 	.version(version);
 const chalk = require('chalk');
 const $q = require('q');
 
@@ -54,7 +59,7 @@ Board.prototype.add = function(input) {
     if (!this.cache.values.length) {
       tile.place({x: 0, y: 0, rotation: 0});
       this.updateCache(tile);
-      resolve(this);
+      resolve();
       return;
     }
 
@@ -127,13 +132,19 @@ Board.prototype.place = function(scanResult, newTile) {
         placement.y = matchTile.y;
         break;
     }
-
+    // console.log('placement', {
+    //   scanResult,
+    //   matchSide,
+    //   availableSide,
+    //   rotateMatch: this.util.rotationDelta(matchSide, availableSide)
+    // })
     placement.rotation = this.util.matchRotation(scanResult.side, availableSide);
 
     newTile.place(placement);    
     this.updateCache(newTile);
 
-    resolve(this);
+    resolve(newTile);
+    
   })
 }
 

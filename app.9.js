@@ -1,76 +1,99 @@
+// import program from 'commander';
+// import { version } from './package.json';
+
+// program
+// 	.version(version);
 const chalk = require('chalk');
-const $q = require('q');
+const fs = require('fs');
+
+let cmds = {};
+
+const ERRORS = [
+  'Match not found',
+  'Cannot place tile'
+]
 
 function Board() {
   this.reset();
 }
 
 Board.prototype.reset = function() {
+  // this.x = {
+  //   max: 0,
+  //   min: 0
+  // };
+  // this.y = {
+  //   max: 0,
+  //   min: 0
+  // };
+  // v2 // this.rowCache = {};
   this.cache = {
     values: [],
     board: ''
   };
   this.library = [];
+
+  this.tiles = [
+    [1,2,3,4],
+    [2,9,8,3],
+    [3,8,9,7],
+    [9,8,3,2],
+    [9,8,6,5]
+  ]
 }
 
 Board.prototype.test = function() {
-  // const tiles = [
-  //   [1,2,3,4],
-  //   [2,9,8,3],
-  //   [3,8,9,7],
-  //   [9,8,3,2],
-  //   [9,8,6,5]
-  // ]
+  // this.add([1,2,3,4]);
+  // t1 = new Tile([2,9,8,3]);
 
+  // return this.tileScan(t1).then((res) => console.log(res)).catch((err) => console.log(err))
   const tiles = [
-    [1,1,3,2],
-    [4,4,1,1],
-    [1,6,6,3],
-    [5,1,2,7],
-    [4,6,6,2],
-    [7,3,8,5]
+    [1,2,3,4],
+    [2,9,8,3],
+    [3,8,9,7],
+    [9,8,3,2]
   ]
   
 
-  a.add(tiles).then(() => {
-    console.log(a.render());
-  })  
+  a.add(a.tiles[0]); a.add(a.tiles[0]); a.add(a.tiles[0]); a.add(a.tiles[0]);
 }
 
 Board.prototype.tileGen = function(inp) { return new Tile(inp, this.library.length) }
 
 Board.prototype.add = function(input) {
-  if (Array.isArray(input[0])) {
-    let chain = $q.when();
-    for (let i = 0; i < input.length; i++) {
-      chain = chain.then(() => this.add(input[i]));      
-    }
-    return chain;
-  }
   return new Promise((resolve, reject) => {  
     let loc = [0, 0];
     let tile = new Tile(input, this.library.length);
 
     if (!this.cache.values.length) {
+      // v2 // this.rows[0] = '0.0-0,0';      
       tile.place({x: 0, y: 0, rotation: 0});
-      this.updateCache(tile);
-      resolve(this);
+      this.updateCache(tile);      
       return;
     }
 
     this.tileScan(tile)
       .then((res) => {
-        this.place(res, tile)
-          .then(resolve)
-          .catch(reject)
-      }).catch(reject);
+        console.log('scan complete', res);
+        this.place(res, tile).then((res) => {
+          // console.log('place complete', res)
+
+        }).catch((reject) => console.log(reject))
+      })
+      .catch((reject) => {
+        console.log('error', reject)
+      });
+    // this.cache = this.cache.concat(input);
   });
 }
 
 Board.prototype.updateCache = function(tile) {  
   if (this.library.length !== tile.id) {
-    let newcache = this.cache.board.replace(new RegExp('(' + tile.id + ')\\.\\d*\\--?\\d*\\,-?\\d*;'), tile.placeString());
-    this.cache.board = this.cache.board.replace(new RegExp('(' + tile.id + ')\\.\\d*\\--?\\d*\\,-?\\d*;'), tile.placeString());
+    console.log('replacing')
+    let newcache = this.cache.board.replace(new RegExp('(' + tile.id + ')\\.(\\d*)\\-(\\d*)\\,(\\d*);'), tile.placeString());
+    console.log(this.cache.board);
+    console.log(newcache);
+    this.cache.board = this.cache.board.replace(new RegExp('(' + tile.id + ')\\.(\\d*)\\-(\\d*)\\,(\\d*);'), tile.placeString());
   } else {
     this.cache.values = this.cache.values.concat(tile.lib);
     this.cache.board += tile.placeString();
@@ -127,13 +150,20 @@ Board.prototype.place = function(scanResult, newTile) {
         placement.y = matchTile.y;
         break;
     }
-
+    console.log('placement', {
+      scanResult,
+      matchSide,
+      availableSide,
+      rotateMatch: this.util.rotationDelta(matchSide, availableSide)
+    })
     placement.rotation = this.util.matchRotation(scanResult.side, availableSide);
+
 
     newTile.place(placement);    
     this.updateCache(newTile);
 
-    resolve(this);
+    resolve(newTile);
+    
   })
 }
 
@@ -169,8 +199,11 @@ Board.prototype.search = function(param, value) {
 function Query(param, value) {
   this.regex = this[param](value);
 }
-Query.prototype.coords = function(val) { return new RegExp('(\\d*)\\.\\d*\\--?' + val[0] + '\\,-?' + val[1]); }
-Query.prototype.id = function(val) { return new RegExp('(' + val + ')\\.\\d*)\\--?\\d*\\,-?\\d*'); }
+Query.prototype.coords = function(val) { return new RegExp('(\\d*)\\.(\\d*)\\-(' + val[0] + ')\\,(' + val[1] + ')'); }
+Query.prototype.id = function(val) { return new RegExp('(' + val + ')\\.(\\d*)\\-(\\d*)\\,(\\d*)'); }
+
+
+
 
 // input = []
 Board.prototype.tileScan = function(tile) {
@@ -219,33 +252,16 @@ Board.prototype.util = {
 }
 
 Board.prototype.render = function() {
-  let output = [];
-  const bounds = {
-    x: {},
-    y: {}    
-  };
-  bounds.x.offset = Math.abs(Math.min(...a.library.map((tile) => tile.x)));
-  bounds.x.max    = Math.max(...a.library.map((tile) => tile.x)) + bounds.x.offset;
-  bounds.y.offset = Math.abs(Math.min(...a.library.map((tile) => tile.y)));
-  bounds.y.max    = Math.max(...a.library.map((tile) => tile.y)) + bounds.y.offset
-
-  for (let y = 0; y <= bounds.y.max; y++) {
-    output = output.concat([[], []]);
-    for (let x = 0; x <= bounds.x.max; x++) {
-      let tile = this.search('coords', [x - bounds.x.offset, y - bounds.y.offset]);
-      if (tile) {
-        output[y*2] = output[y*2].concat([chalk.green(tile.getCurrentValue(0)), chalk.green(tile.getCurrentValue(1))]);
-        output[y*2 + 1] = output[y*2 + 1].concat([chalk.green(tile.getCurrentValue(3)), chalk.green(tile.getCurrentValue(2))]);
-      } else {
-        output[y*2] = output[y*2].concat([' ', ' ']);
-        output[y*2 + 1] = output[y*2 + 1].concat([' ', ' ']);
-      }
+  const ui = {
+    bounds: {
+      x: {},
+      y: {}
     }
-  }
-
-  const hr = chalk.dim('-'.repeat((bounds.x.max + 1) * 8 - 2))  
-
-  return output.map((row) => row.join(' ' + chalk.dim('|') + ' ')).join('\n' + hr + '\n');
+  };
+  ui.bounds.x.offset(Math.abs(Math.min(...a.library.map((tile) => tile.x))));
+  ui.bounds.x.max = Math.max(...a.library.map((tile) => tile.x)) + ui.bounds.x.offset;
+  ui.bounds.y.offset(Math.abs(Math.min(...a.library.map((tile) => tile.y))));
+  ui.bounds.y.max = Math.max(...a.library.map((tile) => tile.y)) + ui.bounds.y.offset
 }
 
 function Tile(tile, index) {
@@ -276,8 +292,10 @@ Tile.prototype.placeString = function() {
   return `${this.id}.${this.rotation}-${this.x},${this.y};`;
 }
 
-Tile.prototype.getCurrentValue = function(idx) {
-  return this.value[((idx - this.rotation) + 4) % 4];
+Tile.prototype.render = function() {
+  return this.value[0] + chalk.dim(' | ') + this.value[1] + '\n' +
+    '-----\n' +
+    this.value[1] + chalk.dim(' | ') + this.value[2];
 }
 
 module.exports = new Board();
