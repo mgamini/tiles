@@ -1,4 +1,6 @@
 var inquirer = require('inquirer');
+var app = require('./app');
+var chalk = require('chalk')
 
 let answers = [];
 
@@ -24,9 +26,16 @@ function ask() {
       }
     }
   ]).then((res) => {    
-    answers.push(JSON.parse(res.tile));
-    console.log(answers);
-    ask();
+    app.add(JSON.parse(res.tile)).then(() => {
+      console.log('\n\n==================================\n\n')
+      console.log(app.render());
+      console.log('\n\n==================================')
+      console.log(chalk.dim(app.cache.board))
+      console.log('==================================\n\n')
+      ask();      
+    }).catch((err) => {
+      chalk.red(err);
+    });
   })
 }
 

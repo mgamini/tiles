@@ -32,8 +32,8 @@ Board.prototype.test = function() {
   ]
   
 
-  a.add(tiles).then(() => {
-    console.log(a.render());
+  this.add(tiles).then(() => {
+    console.log(this.render());
   })  
 }
 
@@ -224,10 +224,10 @@ Board.prototype.render = function() {
     x: {},
     y: {}    
   };
-  bounds.x.offset = Math.abs(Math.min(...a.library.map((tile) => tile.x)));
-  bounds.x.max    = Math.max(...a.library.map((tile) => tile.x)) + bounds.x.offset;
-  bounds.y.offset = Math.abs(Math.min(...a.library.map((tile) => tile.y)));
-  bounds.y.max    = Math.max(...a.library.map((tile) => tile.y)) + bounds.y.offset
+  bounds.x.offset = Math.abs(Math.min(...this.library.map((tile) => tile.x)));
+  bounds.x.max    = Math.max(...this.library.map((tile) => tile.x)) + bounds.x.offset;
+  bounds.y.offset = Math.abs(Math.min(...this.library.map((tile) => tile.y)));
+  bounds.y.max    = Math.max(...this.library.map((tile) => tile.y)) + bounds.y.offset
 
   for (let y = 0; y <= bounds.y.max; y++) {
     output = output.concat([[], []]);
